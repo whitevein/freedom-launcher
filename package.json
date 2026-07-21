@@ -1,0 +1,58 @@
+{
+  "name": "freedom-launcher",
+  "version": "1.0.0",
+  "description": "FreedomCheatt Launcher",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "publish": "electron-builder --win --publish always"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whitevein/freedom-launcher"
+  },
+  "build": {
+    "appId": "com.freedom.launcher",
+    "productName": "Freedom Hub",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "installerIcon": null,
+      "uninstallerIcon": null,
+      "installerHeaderIcon": null,
+      "shortcutName": "Freedom Hub"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "whitevein",
+        "repo": "freedom-launcher",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
