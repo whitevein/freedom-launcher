@@ -371,6 +371,27 @@ body {
 .ctrl-btn:hover { background: rgba(255,255,255,0.06); color: #ccc; }
 .ctrl-close:hover { background: #e74c3c; color: #fff; }
 
+.new-version-btn {
+  height: 22px; padding: 0 10px; border: 1px solid var(--accent, #8B5CF6);
+  background: rgba(var(--accent-rgb, 139,92,246), 0.1);
+  color: var(--accent, #8B5CF6); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  border-radius: 10px; cursor: none; white-space: nowrap;
+  transition: all 0.15s; line-height: 20px;
+}
+.new-version-btn:hover {
+  background: var(--accent, #8B5CF6); color: #fff;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb, 139,92,246), 0.4);
+}
+html.light .new-version-btn {
+  border-color: var(--accent, #7C3AED);
+  color: var(--accent, #7C3AED);
+  background: rgba(var(--accent-rgb, 124,58,237), 0.08);
+}
+html.light .new-version-btn:hover {
+  background: var(--accent, #7C3AED); color: #fff;
+}
+
 /* ─── Profile Menu ─── */
 
 .profile-menu {

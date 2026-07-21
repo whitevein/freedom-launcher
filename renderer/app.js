@@ -528,7 +528,7 @@ document.addEventListener('mousemove', (e) => {
   cursorIdleTimer = setTimeout(() => cursor.classList.add('cursor-hidden'), 3000);
 });
 document.addEventListener('mouseleave', () => cursor.classList.add('cursor-hidden'));
-document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout').forEach(el => {
+document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout, .new-version-btn').forEach(el => {
   el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
   el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
 });
@@ -722,6 +722,7 @@ setInterval(checkServerStatus, 30000);
 /* ─── Auto-Updater ─── */
 
 const updateIndicator = document.getElementById('update-indicator');
+const newVersionBtn = document.getElementById('new-version-btn');
 
 window.launcher.onUpdateStatus((status, data) => {
   if (status === 'checking') {
@@ -733,21 +734,29 @@ window.launcher.onUpdateStatus((status, data) => {
     updateIndicator.title = `Update v${data} available — click to download`;
     updateIndicator.style.cursor = 'pointer';
     updateIndicator.onclick = () => { window.launcher.downloadUpdate(); showToast('Downloading update...', 'info'); };
+    newVersionBtn.style.display = 'inline-flex';
+    newVersionBtn.onclick = () => { window.launcher.downloadUpdate(); showToast('Downloading update...', 'info'); };
   } else if (status === 'downloaded') {
     updateIndicator.className = 'update-indicator ready';
     updateIndicator.title = 'Update ready — click to install';
     updateIndicator.style.cursor = 'pointer';
     showToast('Update downloaded! Click the green dot to install.', 'success');
     updateIndicator.onclick = () => window.launcher.installUpdate();
+    newVersionBtn.textContent = 'Install Now';
+    newVersionBtn.onclick = () => window.launcher.installUpdate();
   } else if (status === 'uptodate') {
     setTimeout(() => { updateIndicator.style.display = 'none'; }, 2000);
+    newVersionBtn.style.display = 'none';
   } else if (status === 'error') {
     updateIndicator.className = 'update-indicator error';
     updateIndicator.title = 'Update check failed';
+    newVersionBtn.style.display = 'none';
   }
 });
+
 window.launcher.onUpdateProgress((pct) => {
   updateIndicator.title = `Downloading... ${Math.round(pct)}%`;
+  newVersionBtn.textContent = `Downloading ${Math.round(pct)}%`;
 });
 
 // Check for updates 3 seconds after launch
