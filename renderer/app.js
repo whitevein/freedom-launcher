@@ -399,10 +399,9 @@ async function loadAdminUserList() {
   list.innerHTML = '<div class="admin-loading">Loading...</div>';
   logsEl.innerHTML = '<div class="admin-loading">Loading...</div>';
   try {
-    const key = localStorage.getItem('adminKey') || '';
     const [uRes, lRes] = await Promise.all([
-      fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(key)}`),
-      fetch(`${API_BASE}/admin/logs?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(key)}`),
+      fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}`),
+      fetch(`${API_BASE}/admin/logs?token=${encodeURIComponent(authToken)}`),
     ]);
     const uData = await uRes.json();
     const lData = await lRes.json();
