@@ -184,6 +184,25 @@ document.getElementById('admin-close').addEventListener('click', () => {
 document.getElementById('admin-overlay').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
 });
+document.getElementById('friend-add-btn').addEventListener('click', async () => {
+  const input = document.getElementById('friend-add-input');
+  const username = input.value.trim();
+  if (!username) return;
+  input.value = '';
+  try {
+    const res = await fetch(`${API_BASE}/api/friend/request`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: authToken, username }),
+    });
+    const d = await res.json();
+    if (d.success) showToast(`Request sent to ${username}`, 'success');
+    else showToast(d.error || 'Failed', 'error');
+  } catch { showToast('Cannot reach server', 'error'); }
+});
+document.getElementById('friend-add-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('friend-add-btn').click(); }
+});
+
 document.getElementById('admin-grant-btn').addEventListener('click', () => {
   playSound('click');
   grantAdmin();
@@ -376,12 +395,19 @@ function openAdminPanel() {
 
 async function loadAdminUserList() {
   const list = document.getElementById('admin-list');
+  const logsEl = document.getElementById('admin-logs');
   list.innerHTML = '<div class="admin-loading">Loading...</div>';
+  logsEl.innerHTML = '<div class="admin-loading">Loading...</div>';
   try {
-    const res = await fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(localStorage.getItem('adminKey') || '')}`);
-    const data = await res.json();
-    if (data.success && data.users) {
-      list.innerHTML = data.users.map(u =>
+    const key = localStorage.getItem('adminKey') || '';
+    const [uRes, lRes] = await Promise.all([
+      fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(key)}`),
+      fetch(`${API_BASE}/admin/logs?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(key)}`),
+    ]);
+    const uData = await uRes.json();
+    const lData = await lRes.json();
+    if (uData.success && uData.users) {
+      list.innerHTML = uData.users.map(u =>
         `<div class="admin-user">
           <span>${escapeHtml(u.username)}</span>
           <span class="admin-tag">${u.is_active ? (u.is_admin ? 'ADMIN' : 'user') : 'disabled'}</span>
@@ -390,8 +416,21 @@ async function loadAdminUserList() {
     } else {
       list.innerHTML = '<div class="admin-loading">Failed to load users</div>';
     }
+    if (lData.success && lData.logs) {
+      logsEl.innerHTML = lData.logs.map(l =>
+        `<div class="admin-log-row">
+          <span class="log-time">${escapeHtml(l.created_at ? l.created_at.slice(11, 19) : '')}</span>
+          <span class="log-level ${l.level}">${escapeHtml(l.level)}</span>
+          ${l.username ? `<span class="log-user">${escapeHtml(l.username)}</span>` : ''}
+          ${escapeHtml(l.message)}
+        </div>`
+      ).join('');
+    } else {
+      logsEl.innerHTML = '<div class="admin-loading">Failed to load logs</div>';
+    }
   } catch {
     list.innerHTML = '<div class="admin-loading">Error loading users</div>';
+    logsEl.innerHTML = '<div class="admin-loading">Error loading logs</div>';
   }
 }
 
@@ -631,7 +670,7 @@ document.addEventListener('mousemove', (e) => {
   cursorIdleTimer = setTimeout(() => cursor.classList.add('cursor-hidden'), 3000);
 });
 document.addEventListener('mouseleave', () => cursor.classList.add('cursor-hidden'));
-document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout, .new-version-btn, .about-close, .about-tg, .admin-input, .admin-btn, .admin-close').forEach(el => {
+document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout, .new-version-btn, .about-close, .about-tg, .admin-input, .admin-btn, .admin-close, .friends-add-input, .friends-add-btn').forEach(el => {
   el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
   el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
 });
@@ -884,33 +923,51 @@ const adminCache = {};
 async function fetchFriends() {
   const list = document.getElementById('friends-list');
   const empty = document.getElementById('friends-empty');
-  const onlineCount = document.getElementById('friends-online');
+  const incomingDiv = document.getElementById('friends-incoming');
+  const incomingList = document.getElementById('friends-incoming-list');
   if (!list) return;
   try {
-    const res = await fetch(`${API_BASE}/api/online`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: authToken }),
-    });
-    const data = await res.json();
-    if (data.success && data.users) {
-      data.users.forEach(u => { adminCache[u.username] = !!u.is_admin; });
-      const online = data.users.filter(u => u.online);
-      onlineCount.textContent = `${online.length} online`;
-      if (online.length > 0) {
-        list.innerHTML = online.map(u => {
-          const isMe = u.username === authUser;
-          return `
-            <div class="friend-item" data-username="${escapeHtml(u.username)}">
-              <div class="friend-avatar">${u.username.charAt(0).toUpperCase()}</div>
-              <div class="friend-info">
-                <div class="friend-name">${escapeHtml(u.username)}${isMe ? ' <span style="color:var(--text-dim);font-size:9px">(you)</span>' : ''}${u.is_admin ? ' <span style="color:var(--accent);font-size:9px;font-weight:700;letter-spacing:0.5px">ADMIN</span>' : ''}</div>
-                <div class="friend-meta">Online</div>
-              </div>
-              <div class="friend-dot online"></div>
+    const [flRes, onRes] = await Promise.all([
+      fetch(`${API_BASE}/api/friend/list?token=${encodeURIComponent(authToken)}`),
+      fetch(`${API_BASE}/api/friend/online`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: authToken }),
+      }),
+    ]);
+    const flData = await flRes.json();
+    const onData = await onRes.json();
+    if (flData.success && onData.success) {
+      const inReq = flData.incoming || [];
+      if (inReq.length > 0) {
+        incomingDiv.style.display = 'block';
+        incomingList.innerHTML = inReq.map(u => `
+          <div class="friend-item" style="padding:4px 8px">
+            <div class="friend-avatar" style="width:22px;height:22px;font-size:10px">${u.charAt(0).toUpperCase()}</div>
+            <div class="friend-info">
+              <div class="friend-name" style="font-size:11px">${escapeHtml(u)}</div>
             </div>
-          `;
-        }).join('');
+            <button class="friends-add-btn fr-accept" data-user="${escapeHtml(u)}" style="padding:3px 8px;font-size:9px">Accept</button>
+            <button class="friends-add-btn fr-decline" data-user="${escapeHtml(u)}" style="padding:3px 8px;font-size:9px;background:#666">Decline</button>
+          </div>
+        `).join('');
+      } else {
+        incomingDiv.style.display = 'none';
+      }
+      const onlineUsers = onData.users || [];
+      onlineUsers.forEach(u => { adminCache[u.username] = !!u.is_admin; });
+      const online = onlineUsers.filter(u => u.online);
+      if (online.length > 0) {
+        list.innerHTML = online.map(u => `
+          <div class="friend-item" data-username="${escapeHtml(u.username)}">
+            <div class="friend-avatar">${u.username.charAt(0).toUpperCase()}</div>
+            <div class="friend-info">
+              <div class="friend-name">${escapeHtml(u.username)}${u.is_admin ? ' <span style="color:var(--accent);font-size:9px;font-weight:700;letter-spacing:0.5px">ADMIN</span>' : ''}</div>
+              <div class="friend-meta">Online</div>
+            </div>
+            <div class="friend-dot online"></div>
+          </div>
+        `).join('');
         list.querySelectorAll('.friend-item').forEach(el => {
           el.addEventListener('click', () => openChat(el.dataset.username));
         });
@@ -918,12 +975,46 @@ async function fetchFriends() {
         list.innerHTML = '';
       }
       empty.style.display = online.length === 0 ? 'flex' : 'none';
+      handleFriendReqs();
       return;
     }
     showToast('Failed to load friends', 'error');
   } catch {
     showToast('Cannot reach server', 'error');
   }
+}
+
+function handleFriendReqs() {
+  document.querySelectorAll('.fr-accept').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const username = btn.dataset.user;
+      try {
+        const res = await fetch(`${API_BASE}/api/friend/respond`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: authToken, username, accept: true }),
+        });
+        const d = await res.json();
+        if (d.success) { showToast(`Accepted ${username}`, 'success'); fetchFriends(); }
+        else showToast(d.error || 'Failed', 'error');
+      } catch { showToast('Cannot reach server', 'error'); }
+    });
+  });
+  document.querySelectorAll('.fr-decline').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const username = btn.dataset.user;
+      try {
+        const res = await fetch(`${API_BASE}/api/friend/respond`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: authToken, username, accept: false }),
+        });
+        const d = await res.json();
+        if (d.success) { showToast(`Declined ${username}`, 'info'); fetchFriends(); }
+        else showToast(d.error || 'Failed', 'error');
+      } catch { showToast('Cannot reach server', 'error'); }
+    });
+  });
 }
 
 /* ─── Chat ─── */

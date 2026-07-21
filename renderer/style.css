@@ -741,6 +741,32 @@ html.light .card:hover {
   font-size: 10px; color: var(--text-dim); font-weight: 500;
   letter-spacing: 0.5px;
 }
+.friends-add-row {
+  display: flex; gap: 4px; align-items: center;
+}
+.friends-add-input {
+  flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05); color: var(--text);
+  font-size: 11px; outline: none; cursor: none;
+}
+.friends-add-input:focus { border-color: var(--accent); }
+.friends-add-btn {
+  padding: 6px 10px; border: none; border-radius: 6px;
+  background: var(--accent); color: #fff; font-size: 10px;
+  font-weight: 600; cursor: none; transition: opacity 0.15s;
+}
+.friends-add-btn:hover { opacity: 0.8; }
+html.light .friends-add-input { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); color: #1a1a2e; }
+.friends-incoming {
+  padding: 0 4px 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.friends-incoming-title {
+  font-size: 9px; color: var(--accent); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.friends-incoming-list {
+  display: flex; flex-direction: column; gap: 2px;
+}
 .friends-list {
   flex: 1; overflow-y: auto;
   display: flex; flex-direction: column; gap: 2px;
@@ -1070,6 +1096,21 @@ html.light .msg.them { background: rgba(0,0,0,0.04); }
   text-transform: uppercase; letter-spacing: 0.5px;
 }
 .admin-loading { color: var(--text-dim); font-size: 11px; text-align: center; padding: 8px; }
+.admin-logs {
+  max-height: 200px; overflow-y: auto; display: flex;
+  flex-direction: column; gap: 2px; font-family: monospace;
+}
+.admin-log-row {
+  font-size: 9px; padding: 3px 6px; border-radius: 4px;
+  background: rgba(255,255,255,0.02); color: var(--text-dim);
+  line-height: 1.3; word-break: break-all;
+}
+.admin-log-row .log-time { color: #888; }
+.admin-log-row .log-level { font-weight: 700; }
+.admin-log-row .log-level.INFO { color: #3b82f6; }
+.admin-log-row .log-level.ERROR { color: #e74c3c; }
+.admin-log-row .log-level.WARN { color: #f59e0b; }
+.admin-log-row .log-user { color: var(--accent); }
 .admin-close {
   padding: 8px; border: none; border-radius: 8px;
   background: rgba(255,255,255,0.05); color: var(--text-dim);

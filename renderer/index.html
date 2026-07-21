@@ -109,6 +109,10 @@
           <label class="admin-label">All Users</label>
           <div class="admin-list" id="admin-list"><div class="admin-loading">Loading...</div></div>
         </div>
+        <div class="admin-section">
+          <label class="admin-label">Logs</label>
+          <div class="admin-logs" id="admin-logs"><div class="admin-loading">Loading...</div></div>
+        </div>
         <button class="admin-close" id="admin-close">Close</button>
       </div>
     </div>
@@ -284,11 +288,18 @@
         </div>
         <div class="tab-content" id="tab-friends">
           <div class="friends-panel" id="friends-panel">
-            <div class="friends-header" id="friends-header">
-              <span class="friends-online" id="friends-online">0 online</span>
+            <div class="friends-header">
+              <div class="friends-add-row">
+                <input class="friends-add-input" id="friend-add-input" placeholder="Add friend by username" />
+                <button class="friends-add-btn" id="friend-add-btn">Add</button>
+              </div>
+            </div>
+            <div class="friends-incoming" id="friends-incoming" style="display:none">
+              <div class="friends-incoming-title">Incoming Requests</div>
+              <div class="friends-incoming-list" id="friends-incoming-list"></div>
             </div>
             <div class="friends-list" id="friends-list"></div>
-            <div class="friends-empty" id="friends-empty">No users online</div>
+            <div class="friends-empty" id="friends-empty">No friends yet</div>
           </div>
           <div class="chat-panel" id="chat-panel" style="display:none">
             <div class="chat-header">
