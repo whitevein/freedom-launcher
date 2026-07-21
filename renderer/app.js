@@ -399,9 +399,10 @@ async function loadAdminUserList() {
   list.innerHTML = '<div class="admin-loading">Loading...</div>';
   logsEl.innerHTML = '<div class="admin-loading">Loading...</div>';
   try {
+    const adminKey = '4fbd013c9b398d77ae1815b464fcb853';
     const [uRes, lRes] = await Promise.all([
-      fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}`),
-      fetch(`${API_BASE}/admin/logs?token=${encodeURIComponent(authToken)}`),
+      fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}&key=${adminKey}`),
+      fetch(`${API_BASE}/admin/logs?token=${encodeURIComponent(authToken)}&key=${adminKey}`),
     ]);
     const uData = await uRes.json();
     const lData = await lRes.json();
@@ -438,10 +439,10 @@ async function grantAdmin() {
   const username = input.value.trim();
   if (!username) { showToast('Enter a username', 'error'); return; }
   try {
-    const res = await fetch(`${API_BASE}/api/admin/grant`, {
+    const res = await fetch(`${API_BASE}/api/admin/grant?token=${encodeURIComponent(authToken)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: authToken, username }),
+      body: JSON.stringify({ username }),
     });
     const data = await res.json();
     if (data.success) {
