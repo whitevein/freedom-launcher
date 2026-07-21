@@ -190,9 +190,9 @@ document.getElementById('friend-add-btn').addEventListener('click', async () => 
   if (!username) return;
   input.value = '';
   try {
-    const res = await fetch(`${API_BASE}/api/friend/request`, {
+    const res = await fetch(`${API_BASE}/api/friend/request?token=${encodeURIComponent(authToken)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: authToken, username }),
+      body: JSON.stringify({ username }),
     });
     const d = await res.json();
     if (d.success) showToast(`Request sent to ${username}`, 'success');
@@ -929,11 +929,7 @@ async function fetchFriends() {
   try {
     const [flRes, onRes] = await Promise.all([
       fetch(`${API_BASE}/api/friend/list?token=${encodeURIComponent(authToken)}`),
-      fetch(`${API_BASE}/api/friend/online`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: authToken }),
-      }),
+      fetch(`${API_BASE}/api/friend/online?token=${encodeURIComponent(authToken)}`, { method: 'POST' }),
     ]);
     const flData = await flRes.json();
     const onData = await onRes.json();
@@ -990,9 +986,9 @@ function handleFriendReqs() {
       e.stopPropagation();
       const username = btn.dataset.user;
       try {
-        const res = await fetch(`${API_BASE}/api/friend/respond`, {
+        const res = await fetch(`${API_BASE}/api/friend/respond?token=${encodeURIComponent(authToken)}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: authToken, username, accept: true }),
+          body: JSON.stringify({ username, accept: true }),
         });
         const d = await res.json();
         if (d.success) { showToast(`Accepted ${username}`, 'success'); fetchFriends(); }
@@ -1005,9 +1001,9 @@ function handleFriendReqs() {
       e.stopPropagation();
       const username = btn.dataset.user;
       try {
-        const res = await fetch(`${API_BASE}/api/friend/respond`, {
+        const res = await fetch(`${API_BASE}/api/friend/respond?token=${encodeURIComponent(authToken)}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: authToken, username, accept: false }),
+          body: JSON.stringify({ username, accept: false }),
         });
         const d = await res.json();
         if (d.success) { showToast(`Declined ${username}`, 'info'); fetchFriends(); }
