@@ -146,7 +146,7 @@ const profileBtn = document.getElementById('profile-btn');
 const profileMenu = document.getElementById('profile-menu');
 profileBtn.addEventListener('click', (e) => {
   playSound('click');
-  document.getElementById('pm-username').textContent = authUser || 'user';
+  document.getElementById('pm-username').innerHTML = `${escapeHtml(authUser || 'user')}${authIsAdmin ? ' <span style="color:var(--accent);font-size:9px;font-weight:700;letter-spacing:0.5px">ADMIN</span>' : ''}`;
   profileMenu.classList.toggle('open');
   e.stopPropagation();
 });
@@ -904,8 +904,8 @@ async function fetchFriends() {
             <div class="friend-item" data-username="${escapeHtml(u.username)}">
               <div class="friend-avatar">${u.username.charAt(0).toUpperCase()}</div>
               <div class="friend-info">
-                <div class="friend-name">${escapeHtml(u.username)}${isMe ? ' <span style="color:var(--text-dim);font-size:9px">(you)</span>' : ''}</div>
-                <div class="friend-meta">Online${u.is_admin ? ' <span style="color:var(--accent);font-size:9px;font-weight:600">ADMIN</span>' : ''}</div>
+                <div class="friend-name">${escapeHtml(u.username)}${isMe ? ' <span style="color:var(--text-dim);font-size:9px">(you)</span>' : ''}${u.is_admin ? ' <span style="color:var(--accent);font-size:9px;font-weight:700;letter-spacing:0.5px">ADMIN</span>' : ''}</div>
+                <div class="friend-meta">Online</div>
               </div>
               <div class="friend-dot online"></div>
             </div>
