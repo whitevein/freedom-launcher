@@ -55,6 +55,7 @@ function createWindow() {
 function setupUpdater() {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.forceDevUpdateConfig = true;
 
   autoUpdater.on('checking-for-update', () => {
     mainWindow?.webContents.send('update-status', 'checking');
@@ -75,7 +76,16 @@ function setupUpdater() {
     mainWindow?.webContents.send('update-status', 'error', err.message);
   });
 
-  ipcMain.handle('check-update', () => { autoUpdater.checkForUpdates(); });
+  ipcMain.handle('check-update', async () => {
+    try {
+      console.log('[updater] checking for updates...');
+      const result = await autoUpdater.checkForUpdates();
+      console.log('[updater] check result:', result);
+    } catch (e) {
+      console.error('[updater] check failed:', e.message, e.stack);
+      mainWindow?.webContents.send('update-status', 'error', e.message);
+    }
+  });
   ipcMain.handle('download-update', () => { autoUpdater.downloadUpdate(); });
   ipcMain.handle('install-update', () => { autoUpdater.quitAndInstall(); });
 }

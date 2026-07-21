@@ -1,0 +1,4 @@
+provider: github
+owner: whitevein
+repo: freedom-launcher
+releaseType: release

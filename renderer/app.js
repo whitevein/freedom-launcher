@@ -13,6 +13,7 @@ const API_BASE = localStorage.getItem('apiBase') || 'https://server-poe.onrender
 let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
 let authToken = localStorage.getItem('authToken') || null;
 let authUser = localStorage.getItem('authUser') || null;
+let authIsAdmin = localStorage.getItem('authIsAdmin') === 'true';
 let isRegisterMode = false;
 let hwid = null;
 
@@ -161,6 +162,45 @@ document.getElementById('pm-color').addEventListener('click', () => {
   profileMenu.classList.remove('open');
   colorPicker.classList.toggle('open');
 });
+document.getElementById('pm-about').addEventListener('click', () => {
+  playSound('click');
+  profileMenu.classList.remove('open');
+  document.getElementById('about-overlay').style.display = 'flex';
+});
+document.getElementById('about-close').addEventListener('click', () => {
+  document.getElementById('about-overlay').style.display = 'none';
+});
+document.getElementById('about-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+});
+
+document.getElementById('pm-admin').addEventListener('click', () => {
+  playSound('click');
+  openAdminPanel();
+});
+document.getElementById('admin-close').addEventListener('click', () => {
+  document.getElementById('admin-overlay').style.display = 'none';
+});
+document.getElementById('admin-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+});
+document.getElementById('admin-grant-btn').addEventListener('click', () => {
+  playSound('click');
+  grantAdmin();
+});
+document.getElementById('admin-target').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); playSound('click'); grantAdmin(); }
+});
+
+document.getElementById('pm-check-update').addEventListener('click', () => {
+  if (newVersionBtn.textContent === 'Install Now') {
+    profileMenu.classList.remove('open');
+    window.launcher.installUpdate();
+  } else {
+    window.launcher.checkUpdate();
+  }
+});
+
 document.getElementById('pm-logout').addEventListener('click', () => {
   playSound('click');
   profileMenu.classList.remove('open');
@@ -273,7 +313,7 @@ async function doRegister(username, email, password) {
   setAuthLoading(false);
 
   if (result.success) {
-    onAuthSuccess(result.token, username);
+    onAuthSuccess(result.token, username, result.is_admin);
   } else {
     showAuthError(result.error || 'Registration failed');
     playSound('error');
@@ -287,7 +327,7 @@ async function doLogin(username, password) {
   setAuthLoading(false);
 
   if (result.success) {
-    onAuthSuccess(result.token, username);
+    onAuthSuccess(result.token, username, result.is_admin);
   } else {
     showAuthError(result.error || 'Login failed');
     playSound('error');
@@ -297,23 +337,86 @@ async function doLogin(username, password) {
 async function verifyToken(token) {
   const hwidVal = await getHwid();
   const result = await apiPost('/api/verify', { token, hwid: hwidVal });
+  if (result.success) {
+    authIsAdmin = !!result.is_admin;
+    localStorage.setItem('authIsAdmin', authIsAdmin);
+  }
   return result.success;
 }
 
-function onAuthSuccess(token, username) {
+function onAuthSuccess(token, username, isAdmin) {
   playSound('success');
   authToken = token;
   authUser = username;
+  authIsAdmin = !!isAdmin;
   localStorage.setItem('authToken', token);
   localStorage.setItem('authUser', username);
+  localStorage.setItem('authIsAdmin', authIsAdmin);
   window.launcher.setAuthToken(token);
   authOverlay.classList.remove('visible');
   showAuthError('');
   showToast(`Welcome, ${username}!`, 'success', 2500);
   sendPing();
   fetchFriends();
+  toggleAdminMenu();
 }
 
+/* ─── Admin ─── */
+
+function toggleAdminMenu() {
+  const el = document.getElementById('pm-admin');
+  if (el) el.style.display = authIsAdmin ? 'flex' : 'none';
+}
+
+function openAdminPanel() {
+  profileMenu.classList.remove('open');
+  document.getElementById('admin-overlay').style.display = 'flex';
+  loadAdminUserList();
+}
+
+async function loadAdminUserList() {
+  const list = document.getElementById('admin-list');
+  list.innerHTML = '<div class="admin-loading">Loading...</div>';
+  try {
+    const res = await fetch(`${API_BASE}/admin/users?token=${encodeURIComponent(authToken)}&key=${encodeURIComponent(localStorage.getItem('adminKey') || '')}`);
+    const data = await res.json();
+    if (data.success && data.users) {
+      list.innerHTML = data.users.map(u =>
+        `<div class="admin-user">
+          <span>${escapeHtml(u.username)}</span>
+          <span class="admin-tag">${u.is_active ? (u.is_admin ? 'ADMIN' : 'user') : 'disabled'}</span>
+        </div>`
+      ).join('');
+    } else {
+      list.innerHTML = '<div class="admin-loading">Failed to load users</div>';
+    }
+  } catch {
+    list.innerHTML = '<div class="admin-loading">Error loading users</div>';
+  }
+}
+
+async function grantAdmin() {
+  const input = document.getElementById('admin-target');
+  const username = input.value.trim();
+  if (!username) { showToast('Enter a username', 'error'); return; }
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/grant`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: authToken, username }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`${username} is now admin!`, 'success');
+      input.value = '';
+      loadAdminUserList();
+    } else {
+      showToast(data.error || 'Failed', 'error');
+    }
+  } catch {
+    showToast('Cannot reach server', 'error');
+  }
+}
 
 
 /* ─── Canvas ─── */
@@ -528,7 +631,7 @@ document.addEventListener('mousemove', (e) => {
   cursorIdleTimer = setTimeout(() => cursor.classList.add('cursor-hidden'), 3000);
 });
 document.addEventListener('mouseleave', () => cursor.classList.add('cursor-hidden'));
-document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout, .new-version-btn').forEach(el => {
+document.querySelectorAll('.card, .ctrl-btn, .cp-swatch, .card-btn, .console-toggle, .console-clear, .auth-btn, .auth-input, .auth-switch button, .tab, .friend-item, .pm-item, .pm-logout, .new-version-btn, .about-close, .about-tg, .admin-input, .admin-btn, .admin-close').forEach(el => {
   el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
   el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
 });
@@ -578,6 +681,7 @@ async function initAuth() {
 
 setTimeout(async () => {
   try { await initAuth(); } catch (_) { authOverlay.classList.add('visible'); }
+  toggleAdminMenu();
   unlockApp();
 }, 2200);
 
@@ -723,12 +827,16 @@ setInterval(checkServerStatus, 30000);
 
 const updateIndicator = document.getElementById('update-indicator');
 const newVersionBtn = document.getElementById('new-version-btn');
+const pmCheckUpdate = document.getElementById('pm-check-update');
+
+function resetPmCheckUpdate() { pmCheckUpdate.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span>Check for Updates</span>'; }
 
 window.launcher.onUpdateStatus((status, data) => {
   if (status === 'checking') {
     updateIndicator.style.display = 'block';
     updateIndicator.className = 'update-indicator';
     updateIndicator.title = 'Checking for update...';
+    pmCheckUpdate.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6h2V7zm0 8h-2v2h2v-2z"/></svg><span>Checking...</span>';
   } else if (status === 'available') {
     updateIndicator.className = 'update-indicator';
     updateIndicator.title = `Update v${data} available — click to download`;
@@ -736,21 +844,28 @@ window.launcher.onUpdateStatus((status, data) => {
     updateIndicator.onclick = () => { window.launcher.downloadUpdate(); showToast('Downloading update...', 'info'); };
     newVersionBtn.style.display = 'inline-flex';
     newVersionBtn.onclick = () => { window.launcher.downloadUpdate(); showToast('Downloading update...', 'info'); };
+    pmCheckUpdate.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>v${data} available</span>`;
+    setTimeout(resetPmCheckUpdate, 4000);
   } else if (status === 'downloaded') {
     updateIndicator.className = 'update-indicator ready';
     updateIndicator.title = 'Update ready — click to install';
     updateIndicator.style.cursor = 'pointer';
-    showToast('Update downloaded! Click the green dot to install.', 'success');
+    showToast('Update downloaded! Click Install Now to install.', 'success');
     updateIndicator.onclick = () => window.launcher.installUpdate();
     newVersionBtn.textContent = 'Install Now';
     newVersionBtn.onclick = () => window.launcher.installUpdate();
+    pmCheckUpdate.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Install Now</span>';
   } else if (status === 'uptodate') {
     setTimeout(() => { updateIndicator.style.display = 'none'; }, 2000);
     newVersionBtn.style.display = 'none';
+    pmCheckUpdate.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Last Version</span>';
+    setTimeout(resetPmCheckUpdate, 3000);
   } else if (status === 'error') {
     updateIndicator.className = 'update-indicator error';
     updateIndicator.title = 'Update check failed';
     newVersionBtn.style.display = 'none';
+    pmCheckUpdate.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Update failed</span>';
+    setTimeout(resetPmCheckUpdate, 3000);
   }
 });
 
@@ -763,6 +878,8 @@ window.launcher.onUpdateProgress((pct) => {
 setTimeout(() => window.launcher.checkUpdate(), 3000);
 
 /* ─── Friends / Online List ─── */
+
+const adminCache = {};
 
 async function fetchFriends() {
   const list = document.getElementById('friends-list');
@@ -777,6 +894,7 @@ async function fetchFriends() {
     });
     const data = await res.json();
     if (data.success && data.users) {
+      data.users.forEach(u => { adminCache[u.username] = !!u.is_admin; });
       const online = data.users.filter(u => u.online);
       onlineCount.textContent = `${online.length} online`;
       if (online.length > 0) {
@@ -787,7 +905,7 @@ async function fetchFriends() {
               <div class="friend-avatar">${u.username.charAt(0).toUpperCase()}</div>
               <div class="friend-info">
                 <div class="friend-name">${escapeHtml(u.username)}${isMe ? ' <span style="color:var(--text-dim);font-size:9px">(you)</span>' : ''}</div>
-                <div class="friend-meta">Online</div>
+                <div class="friend-meta">Online${u.is_admin ? ' <span style="color:var(--accent);font-size:9px;font-weight:600">ADMIN</span>' : ''}</div>
               </div>
               <div class="friend-dot online"></div>
             </div>
@@ -820,7 +938,7 @@ function openChat(username) {
   chatLastId = 0;
   document.getElementById('friends-panel').style.display = 'none';
   document.getElementById('chat-panel').style.display = 'flex';
-  document.getElementById('chat-partner').textContent = username;
+  document.getElementById('chat-partner').innerHTML = `${escapeHtml(username)}${adminCache[username] ? ' <span style="color:var(--accent);font-size:10px;font-weight:700;letter-spacing:0.5px">ADMIN</span>' : ''}`;
   document.getElementById('chat-messages').innerHTML = '';
   document.getElementById('chat-input').value = '';
   document.getElementById('chat-typing').style.display = 'none';
@@ -852,7 +970,8 @@ async function pollMessages() {
         const div = document.createElement('div');
         div.className = `msg ${m.sender === authUser ? 'me' : 'them'}`;
         const time = m.created_at ? m.created_at.slice(11, 16) : '';
-        div.innerHTML = `${escapeHtml(m.content)}<div class="msg-time">${time}</div>`;
+        const adminBadge = m.sender_admin ? '<span class="msg-admin">ADMIN</span>' : '';
+        div.innerHTML = `${adminBadge}${escapeHtml(m.content)}<div class="msg-time">${time}</div>`;
         container.appendChild(div);
       }
       container.scrollTop = container.scrollHeight;

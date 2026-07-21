@@ -57,6 +57,10 @@ html.light .console-clear { color: #666; }
 html.light .console-clear:hover { color: #1a1a2e; }
 html.light .ctrl-btn { color: #666; }
 html.light .ctrl-btn:hover { background: rgba(0,0,0,0.04); color: #1a1a2e; }
+html.light .about-box { background: rgba(255,255,255,0.95); }
+html.light .about-row { background: rgba(0,0,0,0.03); }
+html.light .about-close { background: rgba(0,0,0,0.04); color: #666; }
+html.light .about-close:hover { background: rgba(0,0,0,0.08); color: #1a1a2e; }
 html.light .cp-title { color: #666; }
 html.light .cp-custom { color: #666; }
 html.light .server-text { color: #666; }
@@ -825,6 +829,11 @@ html.light .msg.them { background: rgba(0,0,0,0.04); }
   text-align: right; opacity: 0.6;
 }
 .msg.them .msg-time { text-align: left; }
+.msg-admin {
+  font-size: 8px; color: var(--accent); font-weight: 700;
+  letter-spacing: 0.5px; margin-right: 4px;
+  display: inline-block; vertical-align: middle;
+}
 
 /* ─── Typing Indicator ─── */
 
@@ -968,6 +977,111 @@ html.light .msg.them { background: rgba(0,0,0,0.04); }
   padding: 0 4px; border-radius: 2px; margin-right: 4px;
   background: rgba(var(--accent-rgb), 0.08); color: var(--accent);
 }
+
+/* ─── About Modal ─── */
+
+.about-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.about-box {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; width: 320px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.about-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  text-align: center; margin-bottom: 4px;
+}
+.about-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); gap: 8px;
+}
+.about-role {
+  font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.5px; min-width: 60px;
+}
+.about-name {
+  font-size: 13px; color: var(--text); font-weight: 600;
+}
+.about-tg {
+  font-size: 11px; color: var(--accent); text-decoration: none;
+  font-weight: 500; transition: opacity 0.15s;
+}
+.about-tg:hover { opacity: 0.7; }
+.about-close {
+  margin-top: 4px; padding: 8px; border: none; border-radius: 8px;
+  background: rgba(255,255,255,0.05); color: var(--text-dim);
+  font-size: 12px; cursor: none; transition: all 0.15s;
+}
+.about-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+/* ─── Admin Panel ─── */
+
+.admin-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.admin-box {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; width: 360px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.admin-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  text-align: center;
+}
+.admin-section {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.admin-label {
+  font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.admin-row {
+  display: flex; gap: 6px;
+}
+.admin-input {
+  flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05); color: var(--text);
+  font-size: 12px; outline: none; cursor: none;
+}
+.admin-input:focus { border-color: var(--accent); }
+.admin-btn {
+  padding: 8px 14px; border: none; border-radius: 6px;
+  background: var(--accent); color: #fff; font-size: 11px;
+  font-weight: 600; cursor: none; transition: opacity 0.15s;
+}
+.admin-btn:hover { opacity: 0.8; }
+.admin-list {
+  max-height: 160px; overflow-y: auto; display: flex;
+  flex-direction: column; gap: 4px;
+}
+.admin-list .admin-user {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; border-radius: 6px; font-size: 12px;
+  background: rgba(255,255,255,0.03); color: var(--text);
+}
+.admin-list .admin-user .admin-tag {
+  font-size: 9px; color: var(--accent); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.admin-loading { color: var(--text-dim); font-size: 11px; text-align: center; padding: 8px; }
+.admin-close {
+  padding: 8px; border: none; border-radius: 8px;
+  background: rgba(255,255,255,0.05); color: var(--text-dim);
+  font-size: 12px; cursor: none; transition: all 0.15s;
+}
+.admin-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+html.light .admin-box { background: rgba(255,255,255,0.95); }
+html.light .admin-input { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); color: #1a1a2e; }
+html.light .admin-close { background: rgba(0,0,0,0.04); color: #666; }
+html.light .admin-close:hover { background: rgba(0,0,0,0.08); color: #1a1a2e; }
+html.light .admin-list .admin-user { background: rgba(0,0,0,0.03); }
 
 /* ─── Footer ─── */
 

@@ -84,6 +84,35 @@
       </div>
     </div>
 
+    <!-- About Modal -->
+    <div class="about-overlay" id="about-overlay" style="display:none">
+      <div class="about-box">
+        <div class="about-title">About</div>
+        <div class="about-row"><span class="about-role">Back End</span><span class="about-name">isakame</span><a class="about-tg" href="https://t.me/qeweqweqweq" target="_blank">@qeweqweqweq</a></div>
+        <div class="about-row"><span class="about-role">Front End</span><span class="about-name">xavieu</span><a class="about-tg" href="https://t.me/xavieu" target="_blank">@xavieu</a></div>
+        <button class="about-close" id="about-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-overlay" id="admin-overlay" style="display:none">
+      <div class="admin-box">
+        <div class="admin-title">Admin Panel</div>
+        <div class="admin-section">
+          <label class="admin-label">Grant Admin</label>
+          <div class="admin-row">
+            <input class="admin-input" id="admin-target" placeholder="Username" />
+            <button class="admin-btn" id="admin-grant-btn">Grant</button>
+          </div>
+        </div>
+        <div class="admin-section">
+          <label class="admin-label">All Users</label>
+          <div class="admin-list" id="admin-list"><div class="admin-loading">Loading...</div></div>
+        </div>
+        <button class="admin-close" id="admin-close">Close</button>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -131,7 +160,19 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.1 0 2-.9 2-2 0-.68-.34-1.27-.84-1.65-.26-.2-.35-.53-.23-.82.11-.29.38-.52.85-.52h1.22c2.77 0 5.01-2.24 5.01-5.01C20 5.54 16.41 2 12 2zm-2.5 8.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
           <span>Accent Color</span>
         </div>
+        <div class="pm-item" id="pm-about">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>About</span>
+        </div>
         <div class="pm-divider"></div>
+        <div class="pm-item" id="pm-check-update">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>Check for Updates</span>
+        </div>
+        <div class="pm-item" id="pm-admin" style="display:none">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Admin Panel</span>
+        </div>
         <div class="pm-item pm-logout" id="pm-logout">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           <span>Logout</span>
@@ -289,7 +330,7 @@
           <div class="server-status" id="server-status" title="Click to check now">
             <span class="dot dot-checking"></span><span class="server-text">Server...</span>
           </div>
-          <div class="footer-version" id="footer-version">v1.0.1</div>
+          <div class="footer-version" id="footer-version">v1.0.2</div>
           <div class="update-indicator" id="update-indicator" style="display:none"></div>
         </div>
       </div>
